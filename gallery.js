@@ -6,7 +6,6 @@ const refs = {
 	originImg: document.querySelector(".lightbox__image"),
 };
 refs.ul.addEventListener("click", getOriginalImg);
-refs.modal.addEventListener("click", onCloseModal);
 
 renderGallery();
 
@@ -35,28 +34,78 @@ function getOriginalImg(e) {
 	if (tagImg.nodeName !== "IMG") {
 		return;
 	}
+
 	gallery.forEach((img) => {
 		if (tagImg.src === img.preview) {
 			refs.originImg.src = img.original;
-			return console.log(tagImg);
+			refs.originImg.alt = tagImg.alt;
+			refs.originImg.id = img.id;
 		}
 	});
+
 	onOpenModal();
 }
 
 function onOpenModal() {
 	refs.modal.classList.add("is-open");
-	window.addEventListener("keydown", (e) => {
-		console.dir(e);
-		if (e.key === "Escape") {
-			onCloseModal();
-		}
-	});
+	refs.modal.addEventListener("click", onCloseModal);
+	window.addEventListener("keydown", scrollingImages);
+	window.addEventListener("keydown", onCloseModal);
 }
 
 function onCloseModal(e) {
-	if (e.target.nodeName === "BUTTON" || e.target.nodeName === "DIV") {
+	e.preventDefault();
+	if (
+		e.target.nodeName === "BUTTON" ||
+		e.target.nodeName === "DIV" ||
+		e.key === "Escape"
+	) {
+		refs.originImg.src = "";
+		refs.modal.removeEventListener("click", onCloseModal);
 		window.removeEventListener("keydown", onCloseModal);
-		return refs.modal.classList.remove("is-open");
+		window.removeEventListener("keydown", scrollingImages);
+		refs.modal.classList.remove("is-open");
+	} else if (e.key !== "Escape") {
+		return;
+	}
+}
+
+function scrollingImages(e) {
+	let idVar = Number(refs.originImg.id);
+
+	if (e.key === "ArrowLeft") {
+		prevImg();
+	} else if (e.key === "ArrowRight") {
+		nextImg();
+	}
+
+	function nextImg() {
+		idVar += 1;
+		if (idVar > gallery.length) {
+			idVar = 1;
+		}
+
+		gallery.forEach((img) => {
+			if (img.id == idVar) {
+				refs.originImg.src = img.original;
+				refs.originImg.alt = img.description;
+				refs.originImg.id = img.id;
+				idVar = refs.originImg.id;
+			}
+		});
+	}
+	function prevImg() {
+		idVar -= 1;
+		if (idVar === 0) {
+			idVar = gallery.length;
+		}
+		gallery.forEach((img) => {
+			if (img.id == idVar) {
+				refs.originImg.src = img.original;
+				refs.originImg.alt = img.description;
+				refs.originImg.id = img.id;
+				idVar = refs.originImg.id;
+			}
+		});
 	}
 }
